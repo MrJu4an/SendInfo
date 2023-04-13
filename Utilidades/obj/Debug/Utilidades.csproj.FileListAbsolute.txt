@@ -7,3 +7,7 @@ C:\Users\jsabogal\Documents\Desarrollo\SendConducesInfo\Utilidades\bin\Debug\Uti
 C:\Users\jsabogal\Documents\Desarrollo\SendConducesInfo\Utilidades\bin\Debug\Utilidades.pdb
 C:\Users\jsabogal\Documents\Desarrollo\SendConducesInfo\Utilidades\obj\Debug\Utilidades.dll
 C:\Users\jsabogal\Documents\Desarrollo\SendConducesInfo\Utilidades\obj\Debug\Utilidades.pdb
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\Utilidades\bin\Debug\Utilidades.dll
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\Utilidades\bin\Debug\Utilidades.pdb
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\Utilidades\obj\Debug\Utilidades.dll
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\Utilidades\obj\Debug\Utilidades.pdb

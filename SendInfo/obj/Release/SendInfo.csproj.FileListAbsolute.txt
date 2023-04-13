@@ -1,0 +1,14 @@
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\SendInfo\bin\Release\SendInfo.exe.config
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\SendInfo\bin\Release\SendInfo.exe
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\SendInfo\bin\Release\SendInfo.pdb
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\SendInfo\bin\Release\Bunifu_UI_v1.5.3.dll
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\SendInfo\bin\Release\ConexionDB.dll
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\SendInfo\bin\Release\Utilidades.dll
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\SendInfo\bin\Release\ConexionDB.pdb
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\SendInfo\bin\Release\Utilidades.pdb
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\SendInfo\obj\Release\SendInfo.csprojResolveAssemblyReference.cache
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\SendInfo\obj\Release\SendInfo.Properties.Resources.resources
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\SendInfo\obj\Release\SendInfo.Send.resources
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\SendInfo\obj\Release\SendInfo.csproj.GenerateResource.Cache
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\SendInfo\obj\Release\SendInfo.exe
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\SendInfo\obj\Release\SendInfo.pdb

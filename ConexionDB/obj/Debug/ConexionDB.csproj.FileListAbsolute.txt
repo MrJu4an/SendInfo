@@ -6,3 +6,10 @@ F:\NetAPI\ConexionDB\bin\Debug\Utilidades.pdb
 F:\NetAPI\ConexionDB\obj\Debug\ConexionDB.csprojResolveAssemblyReference.cache
 F:\NetAPI\ConexionDB\obj\Debug\ConexionDB.dll
 F:\NetAPI\ConexionDB\obj\Debug\ConexionDB.pdb
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\ConexionDB\bin\Debug\ConexionDB.dll
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\ConexionDB\bin\Debug\ConexionDB.pdb
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\ConexionDB\bin\Debug\Utilidades.dll
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\ConexionDB\bin\Debug\Utilidades.pdb
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\ConexionDB\obj\Debug\ConexionDB.csprojResolveAssemblyReference.cache
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\ConexionDB\obj\Debug\ConexionDB.dll
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\ConexionDB\obj\Debug\ConexionDB.pdb
