@@ -1,0 +1,9 @@
+F:\NetAPI\Utilidades\bin\Debug\Utilidades.dll
+F:\NetAPI\Utilidades\bin\Debug\Utilidades.pdb
+F:\NetAPI\Utilidades\obj\Debug\Utilidades.csprojResolveAssemblyReference.cache
+F:\NetAPI\Utilidades\obj\Debug\Utilidades.dll
+F:\NetAPI\Utilidades\obj\Debug\Utilidades.pdb
+C:\Users\jsabogal\Documents\Desarrollo\SendConducesInfo\Utilidades\bin\Debug\Utilidades.dll
+C:\Users\jsabogal\Documents\Desarrollo\SendConducesInfo\Utilidades\bin\Debug\Utilidades.pdb
+C:\Users\jsabogal\Documents\Desarrollo\SendConducesInfo\Utilidades\obj\Debug\Utilidades.dll
+C:\Users\jsabogal\Documents\Desarrollo\SendConducesInfo\Utilidades\obj\Debug\Utilidades.pdb

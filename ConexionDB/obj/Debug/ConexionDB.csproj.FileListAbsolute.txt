@@ -1,0 +1,8 @@
+F:\NetAPI\ConexionDB\bin\Debug\ConexionDB.dll
+F:\NetAPI\ConexionDB\bin\Debug\ConexionDB.pdb
+F:\NetAPI\ConexionDB\bin\Debug\Oracle.ManagedDataAccess.dll
+F:\NetAPI\ConexionDB\bin\Debug\Utilidades.dll
+F:\NetAPI\ConexionDB\bin\Debug\Utilidades.pdb
+F:\NetAPI\ConexionDB\obj\Debug\ConexionDB.csprojResolveAssemblyReference.cache
+F:\NetAPI\ConexionDB\obj\Debug\ConexionDB.dll
+F:\NetAPI\ConexionDB\obj\Debug\ConexionDB.pdb

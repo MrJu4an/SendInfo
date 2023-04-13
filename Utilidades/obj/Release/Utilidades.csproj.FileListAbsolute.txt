@@ -1,0 +1,4 @@
+C:\Users\jsabogal\Documents\Desarrollo\SendConduces\Utilidades\bin\Release\Utilidades.dll
+C:\Users\jsabogal\Documents\Desarrollo\SendConduces\Utilidades\bin\Release\Utilidades.pdb
+C:\Users\jsabogal\Documents\Desarrollo\SendConduces\Utilidades\obj\Release\Utilidades.dll
+C:\Users\jsabogal\Documents\Desarrollo\SendConduces\Utilidades\obj\Release\Utilidades.pdb
