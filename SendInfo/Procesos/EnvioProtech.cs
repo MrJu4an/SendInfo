@@ -7,23 +7,26 @@ using SendInfo.Servicios;
 using System.Data;
 using Microsoft.VisualBasic;
 using SendInfo.Modelos;
+using SendInfo.EnvioData;
 
 namespace SendInfo.Procesos
 {
     class EnvioProtech
     {
-        RepositorioProtech iRepositorioProtech;
-        RepositorioGeneral iRepositorioGeneral;
+        IRepositorioProtech iRepositorioProtech;
+        IRepositorioGeneral iRepositorioGeneral;
+        DataProtech dataProtech;
         public EnvioProtech()
         {
-            iRepositorioProtech = new RepositorioProtech();
             iRepositorioGeneral = new RepositorioGeneral();
+            iRepositorioProtech = new RepositorioProtech();
+            dataProtech = new DataProtech();
         }
         public void consultarTasas()
         {
             //Definimos variables
-            DataTable dt, dt2, dt3;
-            DataRow dr, dr2, dr3;
+            DataTable dt;
+            DataRow dr;
             string fecha, hora, FV, fechaV, horaV, fechaTasa, horaTasa, fec;
             string urlTasa, urlCiclo;
             string ciclo, tasa, vigencia;
@@ -62,24 +65,68 @@ namespace SendInfo.Procesos
             tasa = asignarParametro("PROTUPROT");
             if (tasa == null) { return; }
 
-            vigencia = asignarParametro("PROCLVIG"); 
+            vigencia = asignarParametro("PROCLVIG");
             if (vigencia == null) { return; }
-            
+
             //Enviamos la información de la Tasa de Uso
             if (tasa == "S")
             {
 
+                dt = iRepositorioProtech.consultarConduces(fecha);
+                if (dt != null)
+                {
+                    foreach (DataRow dRow in dt.Rows)
+                    {
+                        try
+                        {
+                            TasaUso tasaUso = new TasaUso
+                                (
+                                    Int32.Parse(dRow["CONUMERO"].ToString()),
+                                    dRow["COPLACA"].ToString(),
+                                    dRow["COTERMINAL"].ToString(),
+                                    Strings.Mid(dRow["COFECSAL"].ToString(), 1, 10)
+                                );
+                            dataProtech.EnvioDataTasa(tasaUso, urlTasa);
+                        }
+                        catch (Exception e)
+                        {
+                            string date = DateTime.Now.ToString("MM/dd/yyyy HH:mm");
+                            iRepositorioProtech.insertLog($@"{ e } - Envio Información Tasa - Protech", "N/A", date);
+                        }
+                    }
+                }
+
+            }
+
+            if (ciclo == "S")
+            {
+                try
+                {
+                    dt = iRepositorioProtech.selectConducesCiclo(fecha);
+                    if (dt != null)
+                    {
+                        foreach (DataRow dRow in dt.Rows)
+                        {
+
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    string date = DateTime.Now.ToString("MM/dd/yyyy HH:mm");
+                    iRepositorioProtech.insertLog($@"{ e } - Envio Información Tasa - Protech", "N/A", date);
+                }
             }
         }
 
         public string consultarUrl(string param1, string param2)
         {
             DataRow dr;
-            string urlApi = ""; 
+            string urlApi = "";
             string urlPro = "";
 
             dr = iRepositorioGeneral.consultarParametro(param1);
-            if(dr != null)
+            if (dr != null)
             {
                 urlApi = dr["psval"].ToString();
             }
@@ -90,7 +137,7 @@ namespace SendInfo.Procesos
             }
 
             dr = iRepositorioGeneral.consultarParametro(param2);
-            if(dr != null)
+            if (dr != null)
             {
                 urlPro = dr["psval"].ToString();
             }

@@ -8,7 +8,7 @@ namespace SendInfo.Modelos
 {
     class ResponseTasa
     {
-        public string MSG { get; set; }
-        public int STATUS_CODE { get; set; }
+        public string msg { get; set; }
+        public int status_code { get; set; }
     }
 }

@@ -12,5 +12,18 @@ namespace SendInfo.Modelos
         public string COPLACA { get; set; }
         public string COTERMINAL { get; set; }
         public string COFECHA { get; set; }
+
+        public TasaUso()
+        {
+
+        }
+
+        public TasaUso(double conumero, string coplaca, string coterminal, string cofecha)
+        {
+            this.CONUMERO = conumero;
+            this.COPLACA = coplaca;
+            this.COTERMINAL = coterminal;
+            this.COFECHA = COFECHA;
+        }
     }
 }

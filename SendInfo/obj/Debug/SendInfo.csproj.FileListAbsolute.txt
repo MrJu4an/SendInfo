@@ -12,3 +12,5 @@ C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\SendInfo\obj\Debug\SendInfo.
 C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\SendInfo\obj\Debug\SendInfo.csproj.GenerateResource.Cache
 C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\SendInfo\obj\Debug\SendInfo.exe
 C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\SendInfo\obj\Debug\SendInfo.pdb
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\SendInfo\bin\Debug\Newtonsoft.Json.dll
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\SendInfo\bin\Debug\Newtonsoft.Json.xml
