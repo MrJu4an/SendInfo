@@ -22,6 +22,7 @@ namespace SendInfo.Servicios
         void insertLogCierreCiclo(string tipo, string placa, int idCiclo, string fechaSalida);
         void insertLogEnvProtech(int tipo, string placa, string fecha, string json, string jsonRec, string resultado, string mensaje);
         void updateConducesCiclos(string placa, Double conumero, string fecha);
+        DataTable selectUltimaTasa(string placa, string fecha);
     }
 
     class RepositorioProtech : IRepositorioProtech
@@ -110,7 +111,7 @@ namespace SendInfo.Servicios
             dbs.Execute(QRY);
         }
 
-        public void updateConducesCiclos(string placa, int conumero, string fecha)
+        public void updateConducesCiclos(string placa, Double conumero, string fecha)
         {
             string QRY = $@"UPDATE coconenvp SET 
                             covalciclo = 'OK' 
@@ -118,6 +119,16 @@ namespace SendInfo.Servicios
                             AND conumero = {conumero} 
                             AND cofecsal = TO_DATE('{fecha}','MM/DD/YYYY') ";
             dbs.Execute(QRY);
+        }
+
+        public DataTable selectUltimaTasa(string placa, string fecha)
+        {
+            string QRY = $@"SELECT conumero, cofecsal, cohorven, cohorsal, covalor FROM coconduc 
+                            WHERE coplaca = '{placa}' 
+                            AND cofecsal = TO_DATE('{fecha}','MM/DD/YYYY') 
+                            ORDER BY cofecsal DESC, cohorsal ASC 
+                            FETCH FIRST 3 ROWS ONLY";
+            return dbs.OpenData(QRY);
         }
 
         #endregion

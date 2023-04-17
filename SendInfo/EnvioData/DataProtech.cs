@@ -80,22 +80,40 @@ namespace SendInfo.EnvioData
                                     (
                                         dRow["isplaca"].ToString(),
                                         Int32.Parse(dRow["isidingsal"].ToString()),
-                                        dRow["isfecing"].ToString(),
+                                        Strings.Mid(dRow["isfecing"].ToString(), 1, 10),
                                         dRow["ishoring"].ToString(),
-                                        dRow["isfecsal"].ToString(),
+                                        Strings.Mid(dRow["isfecsal"].ToString(), 1, 10),
                                         dRow["ishorsal"].ToString()
                                     );
 
                                 if (ciclo.ISFECSAL == "" && ciclo.ISHORSAL == "")
                                 {
-                                    if (cierreProtech(ciclo, tasa, url){
-
+                                    if (cierreProtech(ciclo, tasa, url))
+                                    {
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        cierreAutomatico(ciclo, tasa);
+                                        return;
                                     }
                                 }
                             }
                             cont++;
                         }
+                        //Si llega a esta parte, es que no cuenta con un ciclo pendiente de cerrar
+                        //Por ende se actualiza el estado
+                        iRepositorioProtech.updateConducesCiclos(tasa.COPLACA, tasa.CONUMERO, tasa.COFECHA);
                     }
+                    else
+                    {
+                        iRepositorioProtech.updateConducesCiclos(tasa.COPLACA, tasa.CONUMERO, tasa.COFECHA);
+                    }
+                }
+                else
+                {
+                    //Si no registra entrada, verificamos si tiene un ciclo pendiente de cerrar
+
                 }
             }
             catch (Exception ex)
@@ -104,6 +122,116 @@ namespace SendInfo.EnvioData
                 iRepositorioProtech.insertLog($@"{ex.Message} - Primer control - Control Ciclos", "N/A", date);
             }
 
+        }
+
+        public Boolean cierreAutomatico(Ciclo ciclo, TasaUso tasa)
+        {
+            DataRow dr;
+            DataTable dt;
+            string fechaSalida, horaSalida, casEnt, casSal, fechaTasa, fechaIngreso, fechaCiclo, fechaActual;
+            int cont = 1;
+            Double tiempo;
+            Boolean resultado = false;
+
+            //Declaramos las casetas de entradas y salidas
+            if (tasa.COTERMINAL == "C")
+            {
+                casEnt = ValuesTerminal.Entradas.EntradaCentral;
+                casSal = ValuesTerminal.Salidas.SalidaCentral;
+            }
+            else if (tasa.COTERMINAL == "N")
+            {
+                casEnt = ValuesTerminal.Entradas.EntradaNorte;
+                casSal = ValuesTerminal.Salidas.SalidaNorte;
+            }
+            else
+            {
+                casEnt = ValuesTerminal.Entradas.EntradaSur;
+                casSal = ValuesTerminal.Salidas.SalidaSur;
+            }
+
+            try
+            {
+                fechaActual = DateTime.Now.ToString("MM/dd/yyyy");
+
+                //Consultamos el tiempo a adicionar según el parametro
+                dr = iRepositorioGeneral.consultarParametro("MINDADISAL");
+                tiempo = Double.Parse(dr["psval"].ToString());
+
+                dt = iRepositorioProtech.selectUltimaTasa(tasa.COPLACA, ciclo.ISFECING);
+                if (dt != null)
+                {
+                    //Si la fecha del ciclo a cerrar es la misma que la actual, entonces se empieza a validar desde la segunda tasa y no desde la primera
+                    if (DateTime.Parse(ciclo.ISFECING.ToString()) == DateTime.Parse(fechaActual))
+                    {
+                        foreach (DataRow dRow in dt.Rows)
+                        {
+                            if (cont >= 2)
+                            {
+                                //Si se encontro una tasa, verificamos que la fecha de venta de esta, sea mayor a la entrada anterior
+                                fechaTasa = Strings.Mid(dRow["cofecsal"].ToString(), 1, 10) + " " + Strings.Mid(DateTime.Parse(dRow["cohorsal"].ToString()).AddMinutes(-5).ToString(), 12, 5);
+                                fechaIngreso = ciclo.ISFECING + " " + Strings.Mid(ciclo.ISHORING, 12, 5);
+                                if (DateTime.Parse(fechaTasa) > DateTime.Parse(fechaIngreso))
+                                {
+                                    fechaSalida = DateTime.Parse(dRow["cofecsal"].ToString()).ToString("MM/dd/yyyy");
+                                    horaSalida = Strings.Mid(DateTime.Parse(dRow["cohorsal"].ToString()).AddMinutes(tiempo).ToString(), 12, 5);
+                                    //Marcamos la salida
+                                    iRepositorioProtech.updateSalida(ciclo.ISIDINGSAL, ciclo.ISPLACA, fechaSalida, horaSalida, casSal, 0);
+                                    //Insertamos en el log el cierre del ciclo
+                                    iRepositorioProtech.insertLogCierreCiclo("CIERRE AUTOMATICO", ciclo.ISPLACA, ciclo.ISIDINGSAL, fechaSalida);
+                                    //Actualizamos el estado del proceso
+                                    iRepositorioProtech.updateConducesCiclos(tasa.COPLACA, tasa.CONUMERO, tasa.COFECHA);
+                                    resultado = true;
+                                    break;
+                                }
+                                else
+                                {
+                                    //En cuyo caso no se encontro alguna tasa con la que poder cerrar el ciclo, se retorna False
+                                    resultado = false;
+                                }
+                            }
+                            cont++;
+                        }
+                    }
+                    else
+                    {
+                        foreach (DataRow dRow in dt.Rows)
+                        {
+                            //Si se encontro una tasa, verificamos que la fecha de venta de esta, sea mayor a la entrada anterior
+                            fechaTasa = Strings.Mid(dRow["cofecsal"].ToString(), 1, 10) + " " + Strings.Mid(DateTime.Parse(dRow["cohorsal"].ToString()).AddMinutes(-5).ToString(), 12, 5);
+                            fechaIngreso = ciclo.ISFECING + " " + Strings.Mid(ciclo.ISHORING, 12, 5);
+                            if (DateTime.Parse(fechaTasa) > DateTime.Parse(fechaIngreso))
+                            {
+                                fechaSalida = DateTime.Parse(dRow["cofecsal"].ToString()).ToString("MM/dd/yyyy");
+                                horaSalida = Strings.Mid(DateTime.Parse(dRow["cohorsal"].ToString()).AddMinutes(tiempo).ToString(), 12, 5);
+                                //Marcamos la salida
+                                iRepositorioProtech.updateSalida(ciclo.ISIDINGSAL, ciclo.ISPLACA, fechaSalida, horaSalida, casSal, 0);
+                                //Insertamos en el log el cierre del ciclo
+                                iRepositorioProtech.insertLogCierreCiclo("CIERRE AUTOMATICO", ciclo.ISPLACA, ciclo.ISIDINGSAL, fechaSalida);
+                                //Actualizamos el estado del proceso
+                                iRepositorioProtech.updateConducesCiclos(tasa.COPLACA, tasa.CONUMERO, tasa.COFECHA);
+                                resultado = true;
+                                break;
+                            }
+                            else
+                            {
+                                //En cuyo caso no se encontro alguna tasa con la que poder cerrar el ciclo, se retorna False
+                                resultado = false;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    resultado = false;
+                }
+            }
+            catch(Exception ex)
+            {
+                string date = DateTime.Now.ToString("MM/dd/yyyy HH:mm");
+                iRepositorioProtech.insertLog($@"{ex.Message} - Cierre Automatico - Control Ciclos", "N/A", date);
+            }
+            return resultado;
         }
 
         public Boolean cierreProtech(Ciclo ciclo, TasaUso tasa, string url)
