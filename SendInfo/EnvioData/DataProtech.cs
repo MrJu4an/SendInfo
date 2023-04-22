@@ -114,7 +114,49 @@ namespace SendInfo.EnvioData
                 else
                 {
                     //Si no registra entrada, verificamos si tiene un ciclo pendiente de cerrar
-
+                    dt = iRepositorioProtech.selectUltimaEntrada(tasa.COPLACA, tasa.COFECHA);
+                    if (dt != null)
+                    {
+                        //Como no registra entrada, procedemos a verificar la última entrada que registra
+                        foreach(DataRow dRow in dt.Rows)
+                        {
+                            Ciclo ciclo = new Ciclo
+                                    (
+                                        dRow["isplaca"].ToString(),
+                                        Int32.Parse(dRow["isidingsal"].ToString()),
+                                        Strings.Mid(dRow["isfecing"].ToString(), 1, 10),
+                                        dRow["ishoring"].ToString(),
+                                        Strings.Mid(dRow["isfecsal"].ToString(), 1, 10),
+                                        dRow["ishorsal"].ToString()
+                                    );
+                            if (ciclo.ISFECSAL == "" && ciclo.ISHORSAL == "")
+                            {
+                                //Si tiene ciclo incompleto intentamos cerrarlo automáticamente
+                                if (CierreAutomatico(ciclo, tasa))
+                                {
+                                    //Si se logra cerrar, solo mandamos a Protech el registro de la entrada
+                                    EntradaProtech(tasa, url);
+                                    return;
+                                }
+                                else
+                                {
+                                    //Si no se logra realizar el cierre automático, se realiza con los datos de Protech
+                                    EntradaCierreProtech(ciclo, tasa, url);
+                                    return;
+                                }
+                            }
+                            else
+                            {
+                                //Si no tiene ciclo pendiente, registramos solo la entrada
+                                EntradaProtech(tasa, url);
+                                return;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        iRepositorioProtech.updateConducesCiclos(tasa.COPLACA, tasa.CONUMERO, tasa.COFECHA);
+                    }
                 }
             }
             catch (Exception ex)
@@ -432,8 +474,33 @@ namespace SendInfo.EnvioData
                         //Insertamos la permanencia
                         iRepositorioProtech.insertCoparqueo(tasa.COPLACA, empresa, fechaIngreso + " " + horaIngreso,
                                                             fechaSalida + " " + horaSalida, tiempo, resp.CobroPermanencia, tarifa, casEnt, tasa.COTERMINAL);
-
+                        //Se inserta en el log el cobro de parqueadero
+                        iRepositorioProtech.insertLogParqueadero(tasa.COPLACA, fechaIngreso, fechaSalida, resp.CobroPermanencia);
                     }
+                    else
+                    {
+                        tiempo = 0;
+                    }
+
+                    //Cerramos el ciclo con los datos de Protech
+                    iRepositorioProtech.updateSalida(ciclo.ISIDINGSAL, tasa.COPLACA, fechaSalida, horaSalida, casSal, tiempo);
+                    //Insertamos en el log, la salida
+                    iRepositorioProtech.insertLogCierreCiclo("CIERRE PROTECH", tasa.COPLACA, ciclo.ISIDINGSAL, fechaSalida);
+
+                    //******************** ENTRADA ********************************
+                    //Si todo se ejecuta correctamente, registramos la entrada
+                    //Se solicitó por la terminal que si se registra entrada, sea con un retraso de 15 min
+                    fecAnt = Strings.Format(DateTime.Parse(resp.FechaHoraIngreso).AddMinutes(-tiempo).ToString(), "MM/dd/yyyy");
+                    fechaP = Strings.Mid(fecAnt, 1, 10);
+                    horaP = Strings.Mid(fecAnt, 12, 5);
+                    //Registamos la entrada
+                    iRepositorioProtech.insertEntrada(tasa.COPLACA, fechaP, horaP, casEnt, tasa.COTERMINAL);
+                    //Registramos la entrada en el log de ciclos
+                    iRepositorioProtech.insertLogEntrada(tasa.COPLACA, tasa.COFECHA);
+                    //Registramos en el log la transacción con Protech
+                    iRepositorioProtech.insertLogEnvProtech(resp.Proceso, tasa.COPLACA, tasa.COFECHA, resp.JSON, resp.JSONResp, resp.Resultado, resp.Mensaje);
+                    //Actualizamos el estado del proceso
+                    iRepositorioProtech.updateConducesCiclos(tasa.COPLACA, tasa.CONUMERO, tasa.COFECHA);
                 }
             } catch(Exception ex)
             {
