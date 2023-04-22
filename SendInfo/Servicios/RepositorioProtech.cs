@@ -23,6 +23,8 @@ namespace SendInfo.Servicios
         void insertLogEnvProtech(int tipo, string placa, string fecha, string json, string jsonRec, string resultado, string mensaje);
         void updateConducesCiclos(string placa, Double conumero, string fecha);
         DataTable selectUltimaTasa(string placa, string fecha);
+        void insertEntrada(string placa, string fecha, string hora, string casEnt, string terminal);
+        void insertLogEntrada(string placa, string fecha);
     }
 
     class RepositorioProtech : IRepositorioProtech
@@ -131,6 +133,18 @@ namespace SendInfo.Servicios
             return dbs.OpenData(QRY);
         }
 
+        public void insertEntrada(string placa, string fecha, string hora, string casEnt, string terminal)
+        {
+            string QRY = $@"INSERT INTO coingsalp 
+                            (isplaca, isfecing, ishoring, isingoritra, isprualc, isfuncio, isturno, 
+                            iscasent, isterminal, ispermanencia, istipollegada, isrutdes, ispasent) 
+                            VALUES ('{placa}', TO_DATE('{fecha}','MM/DD/YYYY'), TO_DATE('{hora}','HH24:mi:ss'),
+                            'O', 'N', 'entprotech', 1, '{casEnt}', '{terminal}', 0, 'S', '00', 0) ";
+            dbs.Execute(QRY);
+        }
+
+        
+
         #endregion
 
         #region General
@@ -165,6 +179,14 @@ namespace SendInfo.Servicios
             string QRY = $@"INSERT INTO logenvprotech 
                             (lotipo, loplaca, lofecha, lojsonenv, lojsonrec, loresultado) 
                             VALUES ({tipo}, '{placa}', TO_DATE('{fecha}','MM/DD/YYYY HH24:mi'), '{json}', '{jsonRec}', {resultado} / {mensaje}) ";
+            dbs.Execute(QRY);
+        }
+
+        public void insertLogEntrada(string placa, string fecha)
+        {
+            string QRY = $@"INSERT INTO logcierreciclos 
+                            (lotipo, loplaca, lofecing) 
+                            VALUES ('ENTRADA PROTECH', '{placa}', TO_DATE('{fecha}','MM/DD/YYYY')) ";
             dbs.Execute(QRY);
         }
 

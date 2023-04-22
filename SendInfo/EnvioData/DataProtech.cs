@@ -11,6 +11,7 @@ using System.IO;
 using System.Data;
 using SendInfo.Utiles;
 using Microsoft.VisualBasic;
+using System.Security.Policy;
 
 namespace SendInfo.EnvioData
 {
@@ -36,7 +37,7 @@ namespace SendInfo.EnvioData
         {
             try
             {
-                ResponseTasa respuesta = consumirWSTasa(tasa, url);
+                ResponseTasa respuesta = ConsumirWSTasa(tasa, url);
                 if (respuesta.status_code == 0)
                 {
                     iRepositorioProtech.updateTasa(tasa.CONUMERO);
@@ -88,13 +89,13 @@ namespace SendInfo.EnvioData
 
                                 if (ciclo.ISFECSAL == "" && ciclo.ISHORSAL == "")
                                 {
-                                    if (cierreProtech(ciclo, tasa, url))
+                                    if (CierreProtech(ciclo, tasa, url))
                                     {
                                         return;
                                     }
                                     else
                                     {
-                                        cierreAutomatico(ciclo, tasa);
+                                        CierreAutomatico(ciclo, tasa);
                                         return;
                                     }
                                 }
@@ -124,7 +125,7 @@ namespace SendInfo.EnvioData
 
         }
 
-        public Boolean cierreAutomatico(Ciclo ciclo, TasaUso tasa)
+        public Boolean CierreAutomatico(Ciclo ciclo, TasaUso tasa)
         {
             DataRow dr;
             DataTable dt;
@@ -234,7 +235,7 @@ namespace SendInfo.EnvioData
             return resultado;
         }
 
-        public Boolean cierreProtech(Ciclo ciclo, TasaUso tasa, string url)
+        public Boolean CierreProtech(Ciclo ciclo, TasaUso tasa, string url)
         {
             Double tiempo, tarifa;
             string fechaIngreso, horaIngreso, fechaSalida, horaSalida, casEnt, casSal, empresa;
@@ -260,13 +261,13 @@ namespace SendInfo.EnvioData
 
             try
             {
-                ResponseControlCiclos resp = envioDataCtrlCiclo(tasa.COPLACA, tasa.COFECHA, tasa.COTERMINAL, ValuesProtech.ProcesosProtech.CierreProtech, url);
+                ResponseControlCiclos resp = EnvioDataCtrlCiclo(tasa.COPLACA, tasa.COFECHA, tasa.COTERMINAL, ValuesProtech.ProcesosProtech.CierreProtech, url);
                 if (resp.Resultado == "Proceso correcto")
                 {
-                    fechaIngreso = Strings.Mid(ciclo.ISFECING, 1, 10);
-                    horaIngreso = Strings.Mid(ciclo.ISHORING, 12, 5);
-                    fechaSalida = Strings.Mid(resp.FechaHoraSalida, 1, 10);
-                    horaSalida = Strings.Mid(resp.FechaHoraSalida, 12, 5);
+                    fechaIngreso = Strings.Mid(DateTime.Parse(ciclo.ISFECING).ToString(), 1, 10);
+                    horaIngreso = Strings.Mid(DateTime.Parse(ciclo.ISHORING).ToString(), 12, 5);
+                    fechaSalida = Strings.Mid(DateTime.Parse(resp.FechaHoraSalida).ToString(), 1, 10);
+                    horaSalida = Strings.Mid(DateTime.Parse(resp.FechaHoraSalida).ToString(), 12, 5);
 
                     //Consultamos la empresa que pertenece el vehículo
                     dr = iRepositorioGeneral.selectEmpresaVehiculo(tasa.COPLACA);
@@ -313,21 +314,148 @@ namespace SendInfo.EnvioData
             }
             return resultado;
         }
+
+        public void EntradaProtech(TasaUso tasa, string url)
+        {
+            DataRow dr;
+            string casEnt, casSal, fechaP, horaP, fecAnt;
+            Double tiempo;
+
+            dr = iRepositorioGeneral.consultarParametro("MINRESENT");
+            tiempo = Double.Parse(dr["psval"].ToString());
+
+            //Declaramos las casetas de entradas y salidas
+            if (tasa.COTERMINAL == "C")
+            {
+                casEnt = ValuesTerminal.Entradas.EntradaCentral;
+                casSal = ValuesTerminal.Salidas.SalidaCentral;
+            }
+            else if (tasa.COTERMINAL == "N")
+            {
+                casEnt = ValuesTerminal.Entradas.EntradaNorte;
+                casSal = ValuesTerminal.Salidas.SalidaNorte;
+            }
+            else
+            {
+                casEnt = ValuesTerminal.Entradas.EntradaSur;
+                casSal = ValuesTerminal.Salidas.SalidaSur;
+            }
+
+            try
+            {
+
+                ResponseControlCiclos resp = EnvioDataCtrlCiclo(tasa.COPLACA, tasa.COFECHA, tasa.COTERMINAL, ValuesProtech.ProcesosProtech.EntradaProtech, url);
+                if (resp.Resultado == "Proceso correcto")
+                {
+                    //Se solicito por la terminal, que si se registra entrada, sea con un retraso de tiempo según el parametro
+                    fecAnt = Strings.Format(DateTime.Parse(resp.FechaHoraIngreso).AddMinutes(-tiempo).ToString(), "MM/dd/yyyy");
+                    fechaP = Strings.Mid(fecAnt, 1, 10);
+                    horaP = Strings.Mid(fecAnt, 12, 5);
+                    //Registramos la entrada
+                    iRepositorioProtech.insertEntrada(tasa.COPLACA, fechaP, horaP, casEnt, tasa.COTERMINAL);
+                    //Registramos el proceso en el log de ciclos
+                    iRepositorioProtech.insertLogEntrada(tasa.COPLACA, tasa.COFECHA);
+                    //Registramos en el log la transacción con Protech
+                    iRepositorioProtech.insertLogEnvProtech(resp.Proceso, tasa.COPLACA, tasa.COFECHA, resp.JSON, resp.JSONResp, resp.Resultado, resp.Mensaje);
+                    //Actualizamos el estado del proceso
+                    iRepositorioProtech.updateConducesCiclos(tasa.COPLACA, tasa.CONUMERO, tasa.COFECHA);
+                } 
+                else if (resp.Resultado == "Error" && resp.Mensaje == "Movimiento no existe.")
+                {
+                    //Actualizamos el estado del proceso
+                    iRepositorioProtech.updateConducesCiclos(tasa.COPLACA, tasa.CONUMERO, tasa.COFECHA);
+                }
+                else
+                {
+                    iRepositorioProtech.insertLogEnvProtech(resp.Proceso, tasa.COPLACA, tasa.COFECHA, resp.JSON, resp.JSONResp, resp.Resultado, resp.Mensaje);
+                }
+
+
+            } catch (Exception ex)
+            {
+                string date = DateTime.Now.ToString("MM/dd/yyyy HH:mm");
+                iRepositorioProtech.insertLog($@"{ex.Message} - Cierre Protech - Control Ciclos", "N/A", date);
+                
+            }
+
+        }
+
+        public void EntradaCierreProtech(Ciclo ciclo, TasaUso tasa, string url)
+        {
+            Double tiempo, tarifa;
+            string fechaIngreso, fechaSalida, horaIngreso, 
+                    horaSalida, casEnt, casSal, fec, fechaP, horaP, fecAnt, empresa;
+            DataRow dr;
+
+            //Declaramos las casetas de entradas y salidas
+            if (tasa.COTERMINAL == "C")
+            {
+                casEnt = ValuesTerminal.Entradas.EntradaCentral;
+                casSal = ValuesTerminal.Salidas.SalidaCentral;
+            }
+            else if (tasa.COTERMINAL == "N")
+            {
+                casEnt = ValuesTerminal.Entradas.EntradaNorte;
+                casSal = ValuesTerminal.Salidas.SalidaNorte;
+            }
+            else
+            {
+                casEnt = ValuesTerminal.Entradas.EntradaSur;
+                casSal = ValuesTerminal.Salidas.SalidaSur;
+            }
+
+            try
+            {
+                //Consultamos la empresa a la que pertenece el vehículo
+                dr = iRepositorioGeneral.selectEmpresaVehiculo(tasa.COPLACA);
+                empresa = dr["hvcodemp"].ToString();
+
+                ResponseControlCiclos resp = EnvioDataCtrlCiclo(tasa.COPLACA, tasa.COFECHA, tasa.COTERMINAL, ValuesProtech.ProcesosProtech.EntradaCierreProtech, url);
+                if (resp.Resultado == "Proceso correcto")
+                {
+                    fechaSalida = Strings.Mid(DateTime.Parse(resp.FechaHoraSalida).ToString(), 1, 10);
+                    horaSalida = Strings.Mid(DateTime.Parse(resp.FechaHoraSalida).ToString(), 12, 5);
+                    fechaIngreso = Strings.Mid(DateTime.Parse(resp.FechaHoraIngreso).ToString(), 1, 10);
+                    horaIngreso = Strings.Mid(DateTime.Parse(resp.FechaHoraIngreso).ToString(), 12, 5);
+
+                    //Consultamos el tiempo de permanencia
+                    //Si el cobro es mayor a 0, insertamos los registros correspondientes
+                    //Y se registra en el log el proceso
+                    if (resp.CobroPermanencia > 0)
+                    {
+                        tarifa = 0;
+                        dr = iRepositorioGeneral.consultarParametro("VALPARQ1");
+                        tarifa = Double.Parse(dr["psval"].ToString());
+                        //Calculamos el tiempo de la permanencia
+                        TimeSpan time = DateTime.Parse(fechaSalida + " " + horaSalida) - DateTime.Parse(fechaIngreso + " " + horaIngreso);
+                        tiempo = Double.Parse(time.TotalDays.ToString());
+                        //Insertamos la permanencia
+                        iRepositorioProtech.insertCoparqueo(tasa.COPLACA, empresa, fechaIngreso + " " + horaIngreso,
+                                                            fechaSalida + " " + horaSalida, tiempo, resp.CobroPermanencia, tarifa, casEnt, tasa.COTERMINAL);
+
+                    }
+                }
+            } catch(Exception ex)
+            {
+                string date = DateTime.Now.ToString("MM/dd/yyyy HH:mm");
+                iRepositorioProtech.insertLog($@"{ex.Message} - Cierre Protech - Control Ciclos", "N/A", date);
+            }
+        }
         #endregion
 
         #region Consumo Web
-        private ResponseTasa consumirWSTasa(Object json, string url)
+        private ResponseTasa ConsumirWSTasa(Object json, string url)
         {
             string objJson = JsonConvert.SerializeObject(json);
 
             System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
             var data = Encoding.UTF8.GetBytes(objJson);
-            var result_post = sendRequest(new Uri(url), data, "application/json", "POST");
+            var result_post = SendRequest(new Uri(url), data, "application/json", "POST");
             ResponseTasa obj = JsonConvert.DeserializeObject<ResponseTasa>(result_post);
             return obj;
         }
 
-        private ResponseControlCiclos envioDataCtrlCiclo(string placa, string fecha, string terminal, int proceso, string url)
+        private ResponseControlCiclos EnvioDataCtrlCiclo(string placa, string fecha, string terminal, int proceso, string url)
         {
             string fec;
             int ter;
@@ -349,24 +477,24 @@ namespace SendInfo.EnvioData
             //Creamos la clase
             CicloProtech cicloProtech = new CicloProtech(placa, fec, ter, proceso);
             //Realizamos la petición al WS
-            ResponseControlCiclos response = consumirWsControlCiclos(cicloProtech, url);
+            ResponseControlCiclos response = ConsumirWsControlCiclos(cicloProtech, url);
             return response;
         }
 
-        private ResponseControlCiclos consumirWsControlCiclos(Object json, string url)
+        private ResponseControlCiclos ConsumirWsControlCiclos(Object json, string url)
         {
             string objJson = JsonConvert.SerializeObject(json);
 
             System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
             var data = Encoding.UTF8.GetBytes(objJson);
-            var result_post = sendRequest(new Uri(url), data, "application/json", "POST");
+            var result_post = SendRequest(new Uri(url), data, "application/json", "POST");
             ResponseControlCiclos obj = JsonConvert.DeserializeObject<ResponseControlCiclos>(result_post);
             obj.JSON = objJson;
             obj.JSONResp = result_post;
             return obj;
         }
 
-        private string sendRequest(Uri uri, byte[] jsonDataBytes, string contentType, string method)
+        private string SendRequest(Uri uri, byte[] jsonDataBytes, string contentType, string method)
         {
             string response;
             WebRequest request;
