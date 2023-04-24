@@ -27,7 +27,7 @@ namespace SendInfo.Procesos
             //Definimos variables
             DataTable dt;
             DataRow dr;
-            string fecha, hora, FV, fechaV, horaV, fechaTasa, horaTasa, fec;
+            string fecha, hora, FV, fechaV, horaV, horaTasa, fec;
             string urlTasa, urlCiclo;
             string ciclo, tasa, vigencia;
             int tiempo;
@@ -107,7 +107,42 @@ namespace SendInfo.Procesos
                     {
                         foreach (DataRow dRow in dt.Rows)
                         {
+                            TasaUso tasaUso = new TasaUso
+                                (
+                                    Int32.Parse(dRow["CONUMERO"].ToString()),
+                                    dRow["COPLACA"].ToString(),
+                                    dRow["COTERMINAL"].ToString(),
+                                    Strings.Mid(dRow["COFECSAL"].ToString(), 1, 10)
+                                );
+                            dataProtech.controlCiclos(tasaUso, urlCiclo);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    string date = DateTime.Now.ToString("MM/dd/yyyy HH:mm");
+                    iRepositorioProtech.insertLog($@"{ e } - Envio Información Tasa - Protech", "N/A", date);
+                }
+            }
 
+            if (vigencia == "S")
+            {
+                try
+                {
+                    dt = iRepositorioProtech.selectConducesVig(fechaV, horaV);
+                    if (dt != null)
+                    {
+                        foreach (DataRow dRow in dt.Rows)
+                        {
+                            TasaUso tasaUso = new TasaUso
+                                (
+                                    Int32.Parse(dRow["CONUMERO"].ToString()),
+                                    dRow["COPLACA"].ToString(),
+                                    dRow["COTERMINAL"].ToString(),
+                                    Strings.Mid(dRow["COFECSAL"].ToString(), 1, 10)
+                                );
+                            horaTasa = DateTime.Parse(dRow["cohorsal"].ToString()).ToString("HH:mm");
+                            dataProtech.ControlVigencias(tasaUso, horaTasa);
                         }
                     }
                 }

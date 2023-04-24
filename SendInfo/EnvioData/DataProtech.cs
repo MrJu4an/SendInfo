@@ -508,6 +508,75 @@ namespace SendInfo.EnvioData
                 iRepositorioProtech.insertLog($@"{ex.Message} - Cierre Protech - Control Ciclos", "N/A", date);
             }
         }
+
+        public void ControlVigencias(TasaUso tasa, string hora)
+        {
+            DataRow dr;
+            DataTable dt;
+            string fechaEntrada, horaEntrada, casSal, horaSalida;
+            Double tiempo;
+
+            //Declaramos las casetas de entradas y salidas
+            if (tasa.COTERMINAL == "C")
+            {
+                casSal = ValuesTerminal.Salidas.SalidaCentral;
+            }
+            else if (tasa.COTERMINAL == "N")
+            {
+                casSal = ValuesTerminal.Salidas.SalidaNorte;
+            }
+            else
+            {
+                casSal = ValuesTerminal.Salidas.SalidaSur;
+            }
+
+            try
+            {
+                //Buscamos el parametro de tiempo a adicionar a la salida
+                dr = iRepositorioGeneral.consultarParametro("MINADISAL");
+                tiempo = Double.Parse(dr["psval"].ToString());
+
+                dt = iRepositorioProtech.selectUltEntradaTU(tasa.COPLACA, tasa.COFECHA, hora, tasa.COTERMINAL);
+                if (dt != null)
+                {
+                    foreach (DataRow dRow in dt.Rows)
+                    {
+                        //Si la fecha y hora de entrada es menor a la tasa, se entinde que es el ingreso correspondiente
+                        fechaEntrada = Strings.Mid(dRow["isfecing"].ToString(), 1, 10);
+                        horaEntrada = Strings.Mid(dRow["ishoring"].ToString(), 12, 5);
+
+                        if (DateTime.Parse(fechaEntrada) == DateTime.Parse(tasa.COFECHA) && DateTime.Parse(horaEntrada) < DateTime.Parse(hora))
+                        {
+                            //Teniendo la entrada correspondiente, verificamos si a esta, ya se le marco salida
+                            if(dRow["isfecsal"].ToString() != null)
+                            {
+                                //Si no es nulo se actualiza el estado a revisado
+                                iRepositorioProtech.updateEstadoVig(tasa.CONUMERO, tasa.COPLACA, tasa.COFECHA);
+                            }
+                            else
+                            {
+                                //Le añadimos a la hora de salida los minutos según el parametro
+                                horaSalida = DateTime.Parse(hora).AddMinutes(tiempo).ToString("HH24:mi");
+                                //Si es nulo, procedemos a marcar la salida, además que actualizar el estado al proceso
+                                iRepositorioProtech.updateSalida(Int32.Parse(dRow["isidingsal"].ToString()), tasa.COPLACA, tasa.COFECHA, horaSalida, casSal, 0);
+                                //Registramos en el log
+                                iRepositorioProtech.insertLogCierreCiclo("SALIDA CTR VIGENCIA", tasa.COPLACA, Int32.Parse(dRow["isidingsal"].ToString()), tasa.COFECHA);
+                                //Una vez marcada la salida, marcamos el proceso como revisado
+                                iRepositorioProtech.updateEstadoVig(tasa.CONUMERO, tasa.COPLACA, tasa.COFECHA);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    iRepositorioProtech.updateEstadoVig(tasa.CONUMERO, tasa.COPLACA, tasa.COFECHA);
+                }
+            } catch (Exception ex)
+            {
+                string date = DateTime.Now.ToString("MM/dd/yyyy HH:mm");
+                iRepositorioProtech.insertLog($@"{ex.Message} - Cierre Protech - Control Ciclos", "N/A", date);
+            }
+        }
         #endregion
 
         #region Consumo Web

@@ -33,5 +33,6 @@ namespace SendInfo.Servicios
                             WHERE hvplaca = '{placa}' ";
             return dbs.OpenRow(QRY);
         }
+
     }
 }

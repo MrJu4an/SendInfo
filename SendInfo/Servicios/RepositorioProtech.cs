@@ -25,6 +25,9 @@ namespace SendInfo.Servicios
         DataTable selectUltimaTasa(string placa, string fecha);
         void insertEntrada(string placa, string fecha, string hora, string casEnt, string terminal);
         void insertLogEntrada(string placa, string fecha);
+        DataTable selectConducesVig(string fecha, string hora);
+        DataTable selectUltEntradaTU(string placa, string fecha, string hora, string terminal);
+        void updateEstadoVig(double conumero, string placa, string fecha);
     }
 
     class RepositorioProtech : IRepositorioProtech
@@ -143,7 +146,41 @@ namespace SendInfo.Servicios
             dbs.Execute(QRY);
         }
 
-        
+
+
+        #endregion
+
+        #region Control Vigencias
+
+        public DataTable selectConducesVig(string fecha, string hora)
+        {
+            string QRY = $@"SELECT conumero, coplaca, cofecsal, cohorsal, coterminal FROM coconenvp 
+                            WHERE cofecsal = TO_DATE('{fecha}','MM/DD/YYYY') 
+                            AND cohorsal <= TO_DATE('{hora}','HH24:mi') 
+                            AND covalvig = 'PEN' ";
+            return dbs.OpenData(QRY);
+        }
+
+        public DataTable selectUltEntradaTU(string placa, string fecha, string hora, string terminal)
+        {
+            string QRY = $@"SELECT isplaca, isidingsal, isfecing, ishoring, isfecsal, ishorsal FROM coingsalp 
+                            WHERE isplaca = '{placa}' 
+                            AND isfecing = TO_DATE('{fecha}','MM/DD/YYYY') 
+                            AND ishoring <= TO_DATE('{hora}','HH24:mi') 
+                            AND isterminal = '{terminal}' 
+                            ORDER BY isfecing DESC, ishoring DESC ";
+            return dbs.OpenData(QRY);
+        }
+
+        public void updateEstadoVig(double conumero, string placa, string fecha)
+        {
+            string QRY = $@"UPDATE coconenvp SET 
+                            covalvig = 'OK' 
+                            WHERE conumero = {conumero} 
+                            AND coplaca = {placa} 
+                            AND cofecsal = TO_DATE('{fecha}','MM/DD/YYYY') ";
+            dbs.Execute(QRY);
+        }
 
         #endregion
 

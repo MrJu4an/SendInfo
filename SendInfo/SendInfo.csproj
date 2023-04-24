@@ -55,12 +55,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="EnvioData\DataProtech.cs" />
+    <Compile Include="EnvioData\DataRSN.cs" />
+    <Compile Include="Modelos\Caja.cs" />
     <Compile Include="Modelos\Ciclo.cs" />
     <Compile Include="Modelos\CicloProtech.cs" />
+    <Compile Include="Modelos\InfoRSN.cs" />
     <Compile Include="Modelos\ResponseControlCiclos.cs" />
     <Compile Include="Modelos\ResponseTasa.cs" />
     <Compile Include="Modelos\TasaUso.cs" />
     <Compile Include="Procesos\EnvioProtech.cs" />
+    <Compile Include="Procesos\EnvioRSN.cs" />
     <Compile Include="Send.cs">
       <SubType>Form</SubType>
     </Compile>
