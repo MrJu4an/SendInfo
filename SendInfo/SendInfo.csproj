@@ -59,6 +59,7 @@
     <Compile Include="Modelos\Caja.cs" />
     <Compile Include="Modelos\Ciclo.cs" />
     <Compile Include="Modelos\CicloProtech.cs" />
+    <Compile Include="Modelos\Concepto.cs" />
     <Compile Include="Modelos\InfoRSN.cs" />
     <Compile Include="Modelos\ResponseControlCiclos.cs" />
     <Compile Include="Modelos\ResponseTasa.cs" />
@@ -75,7 +76,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Servicios\RepositorioGeneral.cs" />
     <Compile Include="Servicios\RepositorioProtech.cs" />
+    <Compile Include="Servicios\RepositorioRSN.cs" />
     <Compile Include="Utiles\ValuesProtech.cs" />
+    <Compile Include="Utiles\ValuesRSN.cs" />
     <Compile Include="Utiles\ValuesTerminal.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
