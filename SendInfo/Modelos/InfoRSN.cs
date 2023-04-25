@@ -10,7 +10,7 @@ namespace SendInfo.Modelos
     {
         public string CAJA { get; set; }
         public string FECHA { get; set; }
-        public string DATOS { get; set; }
+        public List<Concepto> DATOS { get; set; }
 
 
         public InfoRSN()
@@ -18,7 +18,7 @@ namespace SendInfo.Modelos
 
         }
 
-        public InfoRSN(string caja, string fecha, string datos)
+        public InfoRSN(string caja, string fecha, List<Concepto> datos)
         {
             this.CAJA = caja;
             this.FECHA = fecha;

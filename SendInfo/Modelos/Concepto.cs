@@ -20,12 +20,13 @@ namespace SendInfo.Modelos
 
         }
 
-        public Concepto(int nit, int concepto, Double valor, Double valor_credito, Double valor_contado)
+        public Concepto(int nit, int concepto, Double valor, Double valor_credito, Double valor_cupo, Double valor_contado)
         {
             this.NIT = nit;
             this.CONCEPTO = concepto;
             this.VALOR = valor;
             this.VALOR_CREDITO = valor_credito;
+            this.VALOR_CUPO = valor_cupo;
             this.VALOR_CONTADO = valor_contado;
         }
     }

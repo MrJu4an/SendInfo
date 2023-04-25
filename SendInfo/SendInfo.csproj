@@ -62,6 +62,7 @@
     <Compile Include="Modelos\Concepto.cs" />
     <Compile Include="Modelos\InfoRSN.cs" />
     <Compile Include="Modelos\ResponseControlCiclos.cs" />
+    <Compile Include="Modelos\ResponseRSN.cs" />
     <Compile Include="Modelos\ResponseTasa.cs" />
     <Compile Include="Modelos\TasaUso.cs" />
     <Compile Include="Procesos\EnvioProtech.cs" />

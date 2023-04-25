@@ -15,6 +15,14 @@ namespace SendInfo.Servicios
         DataTable consultarCierres(string fecha);
         DataTable consultarEmpresas(string fecha, string caja);
         DataTable consultarEmpresasConvenio(string fecha, string caja, string codEmp);
+        DataTable selectConducesEmpresa(string codEmp, string fecha, string origen, string caja, int conMin, int conMax, string influe);
+        DataRow selectConducesCreditoEmpresa(string codEmp, string fecha, string origen, string caja, int conMin, int conMax, string influe);
+        DataTable selectAlcoholEmpresa(string codEmp, string fecha, string caja, int conMin, int conMax);
+        DataRow selectAlcoholCreditoEmpresa(string codEmp, string fecha, string caja, int conMin, int conMax);
+        DataRow selectPermanenciasEmpresa(string codEmp, string fecha, string caja, string placa = "");
+        DataRow selectMultaEmpresa(string codEmp, string fecha, string caja, int concepto, string placa = "");
+        DataRow selectVigenciaEmpresa(string codEmp, string fecha, string caja, string placa = "");
+        DataRow selectTagEmpresa(string codEmp, string fecha, string caja, string placa = "");
         int insertLogRSN(string msg, string valor, string fecha);
     }
 
@@ -127,6 +135,144 @@ namespace SendInfo.Servicios
                                 AND tacodemp = '{codEmp}' 
                             ) GROUP BY cocodemp, placa ";
             return dbs.OpenData(QRY);
+        }
+
+        public DataTable selectConducesEmpresa(string codEmp, string fecha, string origen, string caja, int conMin, int conMax, string influe)
+        {
+            string QRY = $@"SELECT NVL(SUM(covalor), 0) AS TotalConduces, comodo 
+                            FROM coconduc 
+                            INNER JOIN opruta 
+                            ON coconduc.cocodrut = opruta.rucodigo 
+                            WHERE conumero BETWEEN {conMin} 
+                            AND {conMax} 
+                            AND cofecsal = TO_DATE('{fecha}', 'MM/DD/YYYY') 
+                            AND cooritra IN ('{origen}') 
+                            AND cocodemp = '{codEmp}' 
+                            AND conomcaj = '{caja}' 
+                            AND cocerrado = 'S' 
+                            AND coestado = 'Activo' 
+                            AND cocredit = 'N' 
+                            AND ruinflue = '{influe}' 
+                            GROUP BY comodo ";
+            return dbs.OpenData(QRY);
+        }
+
+        public DataRow selectConducesCreditoEmpresa(string codEmp, string fecha, string origen, string caja, int conMin, int conMax, string influe)
+        {
+            string QRY = $@"SELECT NVL(SUM(covalor), 0) AS TotalConduces 
+                            FROM coconduc 
+                            INNER JOIN opruta 
+                            ON coconduc.cocodrut = opruta.rucodigo 
+                            WHERE conumero BETWEEN {conMin} 
+                            AND {conMax} 
+                            AND cofecsal = TO_DATE('{fecha}','MM/DD/YYYY') 
+                            AND cooritra IN ('{origen}') 
+                            AND cocodemp = '{codEmp}' 
+                            AND conomcaj = '{caja}' 
+                            AND cocerrado = 'S' 
+                            AND coestado = 'Activo' 
+                            AND cocredit = 'S' 
+                            AND ruinflue = '{influe}' ";
+            return dbs.OpenRow(QRY);
+        }
+
+        public DataTable selectAlcoholEmpresa(string codEmp, string fecha, string caja, int conMin, int conMax)
+        {
+            string QRY = $@"SELECT NVL(SUM(covalalc), 0) AS TotalAlcohol, comodo 
+                            FROM coconduc 
+                            WHERE conumero BETWEEN {conMin} 
+                            AND {conMax} 
+                            AND cofecsal = TO_DATE('{fecha}','MM/DD/YYYY') 
+                            AND cooritra IN ('T', 'O') 
+                            AND cocodemp = '{codEmp}' 
+                            AND conomcaj = '{caja}' 
+                            AND cocerrado = 'S' 
+                            AND coestado = 'Activo' 
+                            GROUP BY comodo ";
+            return dbs.OpenData(QRY);
+        }
+
+        public DataRow selectAlcoholCreditoEmpresa(string codEmp, string fecha, string caja, int conMin, int conMax)
+        {
+            string QRY = $@"SELECT NVL(SUM(covalalc), 0) AS TotalAlcohol 
+                            FROM coconduc 
+                            WHERE conumero BETWEEN {conMin} 
+                            AND {conMax} 
+                            AND cofecsal = TO_DATE('{fecha}', 'MM/DD/YYYY') 
+                            AND cooritra IN ('T', 'O') 
+                            AND cocodemp = '{codEmp}' 
+                            AND conomcaj = '{caja}' 
+                            AND cocerrado = 'S' 
+                            AND coestado = 'Activo' 
+                            AND cocredit = 'S' ";
+            return dbs.OpenRow(QRY);
+        }
+
+        public DataRow selectPermanenciasEmpresa(string codEmp, string fecha, string caja, string placa = "")
+        {
+            string QRY = $@"SELECT NVL(SUM(pavalor), 0) AS TotalPermanencia 
+                            FROM coparqueo 
+                            WHERE pafecpag = TO_DATE('{fecha}', 'MM/DD/YYYY') 
+                            AND pacodemp = '{codEmp}' 
+                            AND pacaja = '{caja}' 
+                            AND patipo = 'P' 
+                            AND pacerrado = 'S' ";
+
+            if (placa != "")
+            {
+                QRY += $@" AND paplaca = '{placa}' ";
+            }
+            return dbs.OpenRow(QRY);
+        }
+
+        public DataRow selectMultaEmpresa(string codEmp, string fecha, string caja, int concepto, string placa = "")
+        {
+            string QRY = $@"SELECT NVL(SUM(abvalor), 0) AS TotalMulta 
+                            FROM opabonos, opmultas 
+                            WHERE mucodemp = '{codEmp}' 
+                            AND abfecha = TO_DATE('{fecha}', 'MM/DD/YYYY') 
+                            AND munumero = abnumero 
+                            AND abnomcaj = '{caja}' 
+                            AND abcerrado = 'S' 
+                            AND mucodinf = {concepto} ";
+
+            if (placa != "")
+            {
+                QRY += $@" and munumpla = '{placa}' ";
+            }
+            return dbs.OpenRow(QRY);
+        }
+
+        public DataRow selectVigenciaEmpresa(string codEmp, string fecha, string caja, string placa = "")
+        {
+            string QRY = $@"SELECT NVL(SUM(pavalor), 0) AS TotalVigencia 
+                            FROM coparqueo 
+                            WHERE pafecpag = TO_DATE('{fecha}', 'MM/DD/YYYY') 
+                            AND pacerrado = 'S' 
+                            AND patipo = 'V' 
+                            AND pacaja = '{caja}' 
+                            AND pacodemp = '{codEmp}' ";
+
+            if (placa != "")
+            {
+                QRY += $@" AND paplaca = '{placa}' ";
+            }
+            return dbs.OpenRow(QRY);
+        }
+
+        public DataRow selectTagEmpresa(string codEmp, string fecha, string caja, string placa = "")
+        {
+            string QRY = $@"SELECT NVL(SUM(tavalor), 0) AS TotalTag 
+                            FROM optag 
+                            WHERE tafecpag = TO_DATE('{fecha}', 'MM/DD/YYYY') 
+                            AND tacodemp = '{codEmp}' 
+                            AND tanomcaj = '{caja}' ";
+
+            if (placa != "")
+            {
+                QRY += $@" AND taplaca = '{placa}' ";
+            }
+            return dbs.OpenRow(QRY);
         }
         #endregion
 
