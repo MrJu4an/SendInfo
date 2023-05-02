@@ -379,6 +379,15 @@ namespace SendInfo.EnvioData
             return listaConceptos;
         }
 
+        public ResponseRSN ConsumirWSRSN(string xml, string url)
+        {
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+            var data = Encoding.UTF8.GetBytes(xml);
+            var result_post = SendRequest(new Uri(url), data, "text/xml", "POST");
+            ResponseRSN response = desencriptarResponse(result_post);
+            return response;
+        }
+
         private string SendRequest(Uri uri, byte[] jsonDataBytes, string contentType, string method)
         {
             string response;
@@ -408,15 +417,27 @@ namespace SendInfo.EnvioData
             return response;
         }
 
-        //public ResponseRSN desencriptarResponse(string r)
-        //{
-        //    XmlNode elemento;
-        //    XmlElement subnodo;
-        //    XmlDocument obj = new XmlElement();
-        //    string cadena;
-        //    ResponseRSN responseRSN = new ResponseRSN();
+        public ResponseRSN desencriptarResponse(string r)
+        {
+            XmlDocument obj = new XmlDocument();
+            string[] cadena;
+            ResponseRSN responseRSN = new ResponseRSN();
 
-        //    obj.LoadXml(r);
-        //}
+            obj.LoadXml(r);
+
+            var primerNodo = obj.GetElementsByTagName("return");
+            foreach (XmlNode e in primerNodo)
+            {
+                foreach (XmlElement s in e)
+                {
+                    cadena = s.InnerXml.Split('>');
+                    responseRSN.Caso = cadena[1].Replace("</caso", "");
+                    responseRSN.Codigo = Int32.Parse(cadena[3].Replace("</codigo", ""));
+                    responseRSN.Observacion = cadena[5].Replace("</observacion", "");
+                }
+            }
+
+            return responseRSN;
+        }
     }
 }

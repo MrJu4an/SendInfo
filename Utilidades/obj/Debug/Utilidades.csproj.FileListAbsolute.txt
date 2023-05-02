@@ -11,3 +11,4 @@ C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\Utilidades\bin\Debug\Utilida
 C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\Utilidades\bin\Debug\Utilidades.pdb
 C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\Utilidades\obj\Debug\Utilidades.dll
 C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\Utilidades\obj\Debug\Utilidades.pdb
+C:\Users\jsabogal\Documents\Desarrollo\Git\SendInfo\Utilidades\obj\Debug\Utilidades.csprojResolveAssemblyReference.cache

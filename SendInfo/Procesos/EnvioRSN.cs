@@ -73,6 +73,17 @@ namespace SendInfo.Procesos
                         //Creamos el XML
                         xml = armadoXML(infoRSN, token);
 
+                        //Consumimos el Web Service de RSN
+                        ResponseRSN response = dataRSN.ConsumirWSRSN(xml, url);
+
+                        if (response.Codigo == 0)
+                        {
+                            iRepositorioRSN.insertLogRSN(response.Caso + $@" Caja: {caja.NOMBRE}", caja.NOMBRE, caja.FECHA);
+                        }
+                        else
+                        {
+                            iRepositorioRSN.insertLogRSN(response.Caso + $@" Caja: {caja.NOMBRE}", caja.NOMBRE, caja.FECHA);
+                        }
                     }
                     catch (Exception ex)
                     {
