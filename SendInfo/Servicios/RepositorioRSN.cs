@@ -97,7 +97,8 @@ namespace SendInfo.Servicios
                                     AND munumero = abnumero 
                                     AND abnomcaj = '{caja}' 
                                     AND abcerrado = 'S' 
-                                    AND mucodinf IN (51, 52, 53, 54) 
+                                    AND mucodinf IN (51, 52, 53, 54)
+                                    AND abestado = 'Activo' 
                                 UNION
                                     SELECT DISTINCT(pacodemp) AS cocodemp, 0 AS covalor, 0 AS CantTasas 
                                     FROM coparqueo 
@@ -123,6 +124,7 @@ namespace SendInfo.Servicios
                                 AND mucodemp = '{codEmp}' 
                                 AND abnomcaj = '{caja}' 
                                 AND abcerrado = 'S' 
+                                AND abestado = 'Activo' 
                             UNION 
                                 SELECT DISTINCT(pacodemp) AS cocodemp, paplaca AS placa, FROM coparqueo 
                                 WHERE pafecpag = TO_DATE('{fecha}', 'MM/DD/YYYY') 
@@ -216,6 +218,7 @@ namespace SendInfo.Servicios
                             AND pacodemp = '{codEmp}' 
                             AND pacaja = '{caja}' 
                             AND patipo = 'P' 
+                            AND paestado = 'C' 
                             AND pacerrado = 'S' ";
 
             if (placa != "")
@@ -234,6 +237,7 @@ namespace SendInfo.Servicios
                             AND munumero = abnumero 
                             AND abnomcaj = '{caja}' 
                             AND abcerrado = 'S' 
+                            AND abestado = 'Activo' 
                             AND mucodinf = {concepto} ";
 
             if (placa != "")
@@ -251,6 +255,7 @@ namespace SendInfo.Servicios
                             AND pacerrado = 'S' 
                             AND patipo = 'V' 
                             AND pacaja = '{caja}' 
+                            AND paestado = 'C' 
                             AND pacodemp = '{codEmp}' ";
 
             if (placa != "")
