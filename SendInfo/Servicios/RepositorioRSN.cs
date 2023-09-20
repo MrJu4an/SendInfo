@@ -271,7 +271,8 @@ namespace SendInfo.Servicios
                             FROM optag 
                             WHERE tafecpag = TO_DATE('{fecha}', 'MM/DD/YYYY') 
                             AND tacodemp = '{codEmp}' 
-                            AND tanomcaj = '{caja}' ";
+                            AND tanomcaj = '{caja}' 
+                            AND taestado = 'A' ";
 
             if (placa != "")
             {

@@ -65,8 +65,9 @@ namespace SendInfo.EnvioData
             int cont = 1;
             try
             {
-                //Consultamos primero si registro la entrada del vehículo
-                dr = iRepositorioProtech.selectEntradaProtech(tasa.COPLACA, tasa.COFECHA, tasa.COTERMINAL);
+                //Sebastián Rondón - 20 de Septiembre 2023
+                //Se valida de forma diferente la entrada
+                dr = ValidarEntrada(tasa.COPLACA, tasa.COFECHA, tasa.COTERMINAL);
                 if (dr != null)
                 {
                     //Si registra entrada actual, verificamos si la entrada anterior está incompleta
@@ -280,9 +281,10 @@ namespace SendInfo.EnvioData
         public Boolean CierreProtech(Ciclo ciclo, TasaUso tasa, string url)
         {
             Double tiempo, tarifa;
-            string fechaIngreso, horaIngreso, fechaSalida, horaSalida, casEnt, casSal, empresa;
+            string fechaIngreso, horaIngreso, fechaSalida, horaSalida, casEnt, casSal, empresa,
+                fechaNueva;
             Boolean resultado = false;
-            DataRow dr;
+            DataRow dr, reserva;
 
             //Declaramos las casetas de entradas y salidas
             if (tasa.COTERMINAL == "C")
@@ -311,6 +313,16 @@ namespace SendInfo.EnvioData
                     fechaSalida = Strings.Mid(DateTime.Parse(resp.FechaHoraSalida).ToString(), 1, 10);
                     horaSalida = Strings.Mid(DateTime.Parse(resp.FechaHoraSalida).ToString(), 12, 5);
 
+                    //Sebastián Rondón - 20 de Septiembre 2023
+                    //Si la fecha de salida enviada por protech es menor a la entrada del ciclo
+                    //Se cambiara entonces a la fecha y hora actual +30min
+                    if (DateTime.Parse(fechaSalida + " " + horaSalida) < DateTime.Parse(fechaIngreso + " " + horaIngreso))
+                    {
+                        fechaNueva = Strings.Format(DateTime.Parse(tasa.COFECHA + " " + tasa.COHORA).AddMinutes(30), "MM/dd/yyyy HH:mm");
+                        fechaSalida = Strings.Mid(DateTime.Parse(fechaNueva).ToString(), 1, 10);
+                        horaSalida = Strings.Mid(DateTime.Parse(fechaNueva).ToString(), 12, 5);
+                    }
+
                     //Consultamos la empresa que pertenece el vehículo
                     dr = iRepositorioGeneral.selectEmpresaVehiculo(tasa.COPLACA);
                     empresa = dr["hvcodemp"].ToString();
@@ -325,8 +337,24 @@ namespace SendInfo.EnvioData
                         //Calculamos el tiempo de permanencia
                         TimeSpan time = (DateTime.Parse(fechaSalida + " " + horaSalida) - DateTime.Parse(fechaIngreso + " " + horaIngreso));
                         tiempo = Double.Parse(time.TotalDays.ToString());
-                        iRepositorioProtech.insertCoparqueo(tasa.COPLACA, empresa, fechaIngreso + " " + horaIngreso, fechaSalida + " " + horaSalida,
-                                                            tiempo, resp.CobroPermanencia, tarifa, casEnt, tasa.COTERMINAL);
+
+                        //Sebastián Rondón - 20 de Septiembre 2023
+                        //Se empieza a verificar si el vehículo esta registrado como reserva
+                        //En cuyo casi si, se registra de manera distinta la permanencia
+                        reserva = iRepositorioProtech.selectReserva(tasa.COPLACA, empresa, fechaSalida);
+                        if (reserva != null)
+                        {
+                            iRepositorioProtech.insertCoparqueo(tasa.COPLACA, empresa, fechaIngreso + " " + horaIngreso, fechaSalida + " " + horaSalida,
+                                                            tiempo, resp.CobroPermanencia, tarifa, casEnt, "I", "No se cobra por vehiculo en reserva - Cierre de Ciclos", tasa.COTERMINAL);
+                        }
+                        else
+                        {
+                            iRepositorioProtech.insertCoparqueo(tasa.COPLACA, empresa, fechaIngreso + " " + horaIngreso, fechaSalida + " " + horaSalida,
+                                                            tiempo, resp.CobroPermanencia, tarifa, casEnt, "A", "Tiempo Acumulado Protech - Cierre de Ciclos", tasa.COTERMINAL);
+                        }
+
+
+
                         iRepositorioProtech.insertLogParqueadero(tasa.COPLACA, fechaIngreso, fechaSalida, resp.CobroPermanencia);
                     }
                     else
@@ -360,7 +388,7 @@ namespace SendInfo.EnvioData
         public void EntradaProtech(TasaUso tasa, string url)
         {
             DataRow dr;
-            string casEnt, casSal, fechaP, horaP, fecAnt;
+            string casEnt, casSal, fechaP, horaP, fecAnt, fec;
             Double tiempo;
 
             dr = iRepositorioGeneral.consultarParametro("MINRESENT");
@@ -385,8 +413,11 @@ namespace SendInfo.EnvioData
 
             try
             {
-
-                ResponseControlCiclos resp = EnvioDataCtrlCiclo(tasa.COPLACA, tasa.COFECHA, tasa.COTERMINAL, ValuesProtech.ProcesosProtech.EntradaProtech, url);
+                //Sebastián Rondón - 20 de Septiembre 2023
+                //Protech solicita que al momento de consumir el proceso de entrada
+                //La fecha ya se envié con el retraso definido en el parametro
+                fec = Strings.Format(DateTime.Parse(tasa.COFECHA + " " + tasa.COHORA).AddMinutes(-tiempo), "MM/dd/yyyy HH:mm");
+                ResponseControlCiclos resp = EnvioDataCtrlCiclo(tasa.COPLACA, fec, tasa.COTERMINAL, ValuesProtech.ProcesosProtech.EntradaProtech, url);
                 if (resp.Resultado == "Proceso correcto")
                 {
                     //Se solicito por la terminal, que si se registra entrada, sea con un retraso de tiempo según el parametro
@@ -426,8 +457,8 @@ namespace SendInfo.EnvioData
         {
             Double tiempo, tarifa;
             string fechaIngreso, fechaSalida, horaIngreso, 
-                    horaSalida, casEnt, casSal, fec, fechaP, horaP, fecAnt, empresa;
-            DataRow dr;
+                    horaSalida, casEnt, casSal, fec, fechaP, horaP, fecAnt, empresa, fechaNueva;
+            DataRow dr, reserva;
 
             //Declaramos las casetas de entradas y salidas
             if (tasa.COTERMINAL == "C")
@@ -460,6 +491,16 @@ namespace SendInfo.EnvioData
                     fechaIngreso = Strings.Mid(DateTime.Parse(resp.FechaHoraIngreso).ToString(), 1, 10);
                     horaIngreso = Strings.Mid(DateTime.Parse(resp.FechaHoraIngreso).ToString(), 12, 5);
 
+                    //Sebastián Rondón - 20 de Septiembre 2023
+                    //Si la fecha de salida enviada por protech es menor a la entrada del ciclo
+                    //Se cambiara entonces a la fecha y hora actual +30min
+                    if (DateTime.Parse(fechaSalida + " " + horaSalida) < DateTime.Parse(fechaIngreso + " " + horaIngreso))
+                    {
+                        fechaNueva = Strings.Format(DateTime.Parse(tasa.COFECHA + " " + tasa.COHORA).AddMinutes(30), "MM/dd/yyyy HH:mm");
+                        fechaSalida = Strings.Mid(DateTime.Parse(fechaNueva).ToString(), 1, 10);
+                        horaSalida = Strings.Mid(DateTime.Parse(fechaNueva).ToString(), 12, 5);
+                    }
+
                     //Consultamos el tiempo de permanencia
                     //Si el cobro es mayor a 0, insertamos los registros correspondientes
                     //Y se registra en el log el proceso
@@ -471,9 +512,22 @@ namespace SendInfo.EnvioData
                         //Calculamos el tiempo de la permanencia
                         TimeSpan time = DateTime.Parse(fechaSalida + " " + horaSalida) - DateTime.Parse(fechaIngreso + " " + horaIngreso);
                         tiempo = Double.Parse(time.TotalDays.ToString());
-                        //Insertamos la permanencia
-                        iRepositorioProtech.insertCoparqueo(tasa.COPLACA, empresa, fechaIngreso + " " + horaIngreso,
-                                                            fechaSalida + " " + horaSalida, tiempo, resp.CobroPermanencia, tarifa, casEnt, tasa.COTERMINAL);
+                        
+                        //Sebastián Rondón - 20 de Septiembre 2023
+                        //Se empieza a verificar si el vehículo esta registrado como reserva
+                        //En cuyo casi si, se registra de manera distinta la permanencia
+                        reserva = iRepositorioProtech.selectReserva(tasa.COPLACA, empresa, fechaSalida);
+                        if (reserva != null)
+                        {
+                            iRepositorioProtech.insertCoparqueo(tasa.COPLACA, empresa, fechaIngreso + " " + horaIngreso, fechaSalida + " " + horaSalida,
+                                                            tiempo, resp.CobroPermanencia, tarifa, casEnt, "I", "No se cobra por vehiculo en reserva - Cierre de Ciclos", tasa.COTERMINAL);
+                        }
+                        else
+                        {
+                            iRepositorioProtech.insertCoparqueo(tasa.COPLACA, empresa, fechaIngreso + " " + horaIngreso, fechaSalida + " " + horaSalida,
+                                                            tiempo, resp.CobroPermanencia, tarifa, casEnt, "A", "Tiempo Acumulado Protech - Cierre de Ciclos", tasa.COTERMINAL);
+                        }
+                        
                         //Se inserta en el log el cobro de parqueadero
                         iRepositorioProtech.insertLogParqueadero(tasa.COPLACA, fechaIngreso, fechaSalida, resp.CobroPermanencia);
                     }
@@ -576,6 +630,31 @@ namespace SendInfo.EnvioData
                 string date = DateTime.Now.ToString("MM/dd/yyyy HH:mm");
                 iRepositorioProtech.insertLog($@"{ex.Message} - Cierre Protech - Control Ciclos", "N/A", date);
             }
+        }
+
+        public DataRow ValidarEntrada(string placa, string fecha, string terminal)
+        {
+            string fechaSalida;
+            DataRow ultSalida;
+            DataRow ultEntrada = null;
+
+            //Consultamos primero la última salida
+            try
+            {
+                ultSalida = iRepositorioProtech.selectUltimaSalida(placa, terminal);
+
+                if (ultSalida != null)
+                {
+                    //Ahora buscamos si encontramos una entrada mayor a esta última salida
+                    fechaSalida = Strings.Mid(ultSalida["isfecsal"].ToString(), 1, 10);
+                    ultEntrada = iRepositorioProtech.selectEntradaProtech(placa, fechaSalida, terminal);
+                }
+            } catch (Exception ex)
+            {
+                string date = DateTime.Now.ToString("MM/dd/yyyy HH:mm");
+                iRepositorioProtech.insertLog($@"{ex.Message} - Cierre Protech - Control Ciclos", placa, date);
+            }
+            return ultEntrada;
         }
         #endregion
 

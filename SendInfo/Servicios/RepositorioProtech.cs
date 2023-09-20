@@ -16,7 +16,8 @@ namespace SendInfo.Servicios
         DataRow selectEntradaProtech(string placa, string fecha, string terminal);
         DataTable selectUltimaEntrada(string placa, string fecha);
         void insertCoparqueo(string placa, string empresa, string fecini, string fecsal, Double tiempo,
-                                    Double valor, Double tarifa, string entrada, string terminal);
+                                    Double valor, Double tarifa, string entrada, string estado, 
+                                    string observacion, string terminal);
         void insertLogParqueadero(string placa, string fechaEntrada, string fechaSalida, Double valor);
         void updateSalida(int id, string placa, string fecha, string hora, string casSal, Double permanencia);
         void insertLogCierreCiclo(string tipo, string placa, int idCiclo, string fechaSalida);
@@ -27,6 +28,8 @@ namespace SendInfo.Servicios
         void insertLogEntrada(string placa, string fecha);
         DataTable selectConducesVig(string fecha, string hora);
         DataTable selectUltEntradaTU(string placa, string fecha, string hora, string terminal);
+        DataRow selectUltimaSalida(string placa, string terminal);
+        DataRow selectReserva(string placa, string empresa, string fecha);
         void updateEstadoVig(double conumero, string placa, string fecha);
     }
 
@@ -51,7 +54,7 @@ namespace SendInfo.Servicios
 
         public DataTable consultarConduces(string fecha)
         {
-            string QRY = $@"SELECT conumero, coplaca, cofecsal, coterminal 
+            string QRY = $@"SELECT conumero, coplaca, cofecsal, cohorven, coterminal 
                             FROM coconenvp 
                             WHERE cofecsal = TO_DATE('{fecha}','MM/DD/YYYY') AND coestado = 'PEN' ";
             return dbs.OpenData(QRY);
@@ -68,7 +71,7 @@ namespace SendInfo.Servicios
 
         public DataTable selectConducesCiclo(string fecha)
         {
-            string QRY = $@"SELECT conumero, coplaca, cofecsal, coterminal FROM coconenvp 
+            string QRY = $@"SELECT conumero, coplaca, cofecsal, cohorven, coterminal FROM coconenvp 
                             WHERE cofecsal = TO_DATE('{fecha}', 'MM/DD/YYYY') AND covalciclo = 'PEN' ";
             return dbs.OpenData(QRY);
         }
@@ -76,7 +79,7 @@ namespace SendInfo.Servicios
         public DataRow selectEntradaProtech(string placa, string fecha, string terminal)
         {
             string QRY = $@"SELECT isplaca FROM coingsalp 
-                            WHERE isfecing = TO_DATE('{fecha}', 'MM/DD/YYYY') 
+                            WHERE isfecing >= TO_DATE('{fecha}', 'MM/DD/YYYY') 
                             AND isfecsal IS NULL 
                             AND isterminal = '{terminal}'
                             AND isplaca = '{placa}' ";
@@ -93,13 +96,27 @@ namespace SendInfo.Servicios
             return dbs.OpenData(QRY);
         }
 
+        public DataRow selectUltimaSalida(string placa, string terminal)
+        {
+            string QRY = $@"SELECT * FROM (
+                                SELECT isfecsal, TO_CHAR(ishorsal, 'HH24:MI:SS') AS ishorsal 
+                                FROM coingsalp 
+                                WHERE isfecsal IS NOT NULL 
+                                AND isterminal = '{terminal}' 
+                                AND isplaca = '{placa}' 
+                                ORDER BY isfecsal DESC, ishorsal DESC 
+                            ) WHERE ROWNUM <= 1";
+            return dbs.OpenRow(QRY); 
+        }
+
         public void insertCoparqueo(string placa, string empresa, string fecini, string fecsal, Double tiempo, 
-                                    Double valor, Double tarifa, string entrada, string terminal)
+                                    Double valor, Double tarifa, string entrada, string estado, string observacion,
+                                    string terminal)
         {
             string QRY = $@"INSERT INTO coparqueop 
                             (paplaca, pacodemp, pafecini, pafecsal, patiempo, pavalor, paestado, paobservacion, paregpc, patarifa, patipo, paterminal) 
                             VALUES ('{placa}', '{empresa}', TO_DATE('{fecini}','MM/DD/YYYY HH24:mi:ss'), TO_DATE('{fecsal}','MM/DD/YYYY HH24:mi:ss'),
-                            {tiempo}, {valor}, 'A', 'Tiempo Acumulado Protech - Cierre de Ciclos', '{entrada}', {tarifa}, 'P', '{terminal}')";
+                            {tiempo}, {valor}, '{estado}', '{observacion}', '{entrada}', {tarifa}, 'P', '{terminal}')";
             dbs.Execute(QRY);
         }
 
@@ -146,7 +163,16 @@ namespace SendInfo.Servicios
             dbs.Execute(QRY);
         }
 
-
+        public DataRow selectReserva(string placa, string empresa, string fecha)
+        {
+            string QRY = $@"SELECT vrfecha 
+                                FROM covehreserva 
+                                WHERE vrfecha = TO_DATE('{fecha}', 'MM/DD/YYYY') 
+                                AND vrcodemp = '{empresa}' 
+                                AND vrplaca = '{placa}' 
+                                AND vrestado = 'A' ";
+            return dbs.OpenRow(QRY);
+        }
 
         #endregion
 
@@ -154,7 +180,7 @@ namespace SendInfo.Servicios
 
         public DataTable selectConducesVig(string fecha, string hora)
         {
-            string QRY = $@"SELECT conumero, coplaca, cofecsal, cohorsal, coterminal FROM coconenvp 
+            string QRY = $@"SELECT conumero, coplaca, cofecsal, cohorven, cohorsal, coterminal FROM coconenvp 
                             WHERE cofecsal = TO_DATE('{fecha}','MM/DD/YYYY') 
                             AND cohorsal <= TO_DATE('{hora}','HH24:mi') 
                             AND covalvig = 'PEN' ";

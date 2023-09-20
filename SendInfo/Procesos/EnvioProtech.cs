@@ -84,7 +84,8 @@ namespace SendInfo.Procesos
                                     Int32.Parse(dRow["CONUMERO"].ToString()),
                                     dRow["COPLACA"].ToString(),
                                     dRow["COTERMINAL"].ToString(),
-                                    Strings.Mid(dRow["COFECSAL"].ToString(), 1, 10)
+                                    Strings.Mid(dRow["COFECSAL"].ToString(), 1, 10),
+                                    Strings.Mid(dRow["COHORVEN"].ToString(), 12, 5)
                                 );
                             dataProtech.EnvioDataTasa(tasaUso, urlTasa);
                         }
@@ -112,7 +113,8 @@ namespace SendInfo.Procesos
                                     Int32.Parse(dRow["CONUMERO"].ToString()),
                                     dRow["COPLACA"].ToString(),
                                     dRow["COTERMINAL"].ToString(),
-                                    Strings.Mid(dRow["COFECSAL"].ToString(), 1, 10)
+                                    Strings.Mid(dRow["COFECSAL"].ToString(), 1, 10),
+                                    Strings.Mid(dRow["COHORVEN"].ToString(), 12, 5)
                                 );
                             dataProtech.controlCiclos(tasaUso, urlCiclo);
                         }
@@ -139,7 +141,8 @@ namespace SendInfo.Procesos
                                     Int32.Parse(dRow["CONUMERO"].ToString()),
                                     dRow["COPLACA"].ToString(),
                                     dRow["COTERMINAL"].ToString(),
-                                    Strings.Mid(dRow["COFECSAL"].ToString(), 1, 10)
+                                    Strings.Mid(dRow["COFECSAL"].ToString(), 1, 10),
+                                    Strings.Mid(dRow["COHORVEN"].ToString(), 12, 5)
                                 );
                             horaTasa = DateTime.Parse(dRow["cohorsal"].ToString()).ToString("HH:mm");
                             dataProtech.ControlVigencias(tasaUso, horaTasa);
